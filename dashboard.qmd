@@ -1,0 +1,82 @@
+---
+title: "Dashboard"
+format: 
+  dashboard:
+    orientation: columns
+---
+
+```{r}
+library(tidyverse)
+library(plotly)
+```
+
+
+```{r}
+# Create example plot
+gg_scatter <- ggplot(mtcars, aes(x = wt, y = mpg, color = factor(cyl))) +
+  geom_point(size = 3) +
+  labs(title = "Car Weight vs. MPG by Cylinders",
+       x = "Weight (1000 lbs)",
+       y = "Miles Per Gallon",
+       color = "Cylinders")
+
+# Convert to interactive plotly visualization
+interactive_scatter <- ggplotly(gg_scatter)
+```
+
+
+# Page 1
+
+## Column
+
+### Chart 1
+
+```{r}
+#| title: Chart 1
+interactive_scatter
+```
+
+## Column
+
+### Chart 2
+
+```{r}
+#| title: Chart 2
+interactive_scatter
+```
+
+### Chart 3
+
+```{r}
+#| title: Chart 3
+interactive_scatter
+```
+
+
+
+# Page 2
+
+## Column
+
+### Chart 4
+
+```{r}
+#| title: Chart 4
+interactive_scatter
+```
+
+## Column
+
+### Chart 5
+
+```{r}
+#| title: Chart 5
+interactive_scatter
+```
+
+### Chart 6
+
+```{r}
+#| title: Chart 6
+interactive_scatter
+```
