@@ -25,9 +25,11 @@ interactive_scatter <- ggplotly(gg_scatter)
 ```
 
 
-# Page 1
+# About
 
 ## Column
+
+This dashboard explores COVID-19 data.
 
 ### Chart 1
 
@@ -54,9 +56,9 @@ interactive_scatter
 
 
 
-# Page 2
+# Interactive Visualizations
 
-## Column
+## Column {width=40%}
 
 ### Chart 4
 
@@ -65,14 +67,14 @@ interactive_scatter
 interactive_scatter
 ```
 
-## Column
-
 ### Chart 5
 
 ```{r}
 #| title: Chart 5
 interactive_scatter
 ```
+
+## Column {width=60%}
 
 ### Chart 6
 
