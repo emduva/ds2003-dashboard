@@ -64,7 +64,6 @@ interactive_scatter
 
 ```{r}
 #| title: Chart 4
-interactive_scatter
 ```
 
 ### Chart 5
@@ -80,5 +79,43 @@ interactive_scatter
 
 ```{r}
 #| title: Chart 6
-interactive_scatter
+#install.packages("viridis")
+
+library(ggplot2)
+library(dplyr)
+library(sf)
+library(viridis)
+read.csv("covid_cleaned_for_analysis.csv")
+COVID <- read.csv("covid_cleaned_for_analysis.csv")
+
+filtered_COVID <- COVID %>% 
+  group_by(Country_Region)
+
+covid_summary <- filtered_COVID %>%
+  group_by(Country_Region) %>%
+  summarise(total_cases = sum(positive, na.rm = TRUE))
+
+world_sf <- read_sf("https://raw.githubusercontent.com/holtzy/R-graph-gallery/master/DATA/world.geojson")
+world_sf <- world_sf %>%
+  filter(!name %in% c("Antarctica", "Greenland"))
+world_covid <- left_join(world_sf, covid_summary, by = c("name" = "Country_Region"))
+
+ggplot(data = world_covid) +
+  geom_sf(aes(fill = total_cases), color = "white", size = 0.1) +
+  scale_fill_viridis(
+    option = "plasma",
+    trans = "log",     
+    na.value = "grey90",
+    name = "Total Cases"
+  ) +
+  labs(
+    title = "Global COVID-19 Total Cases in 2020",
+    caption = "Source: filtered_COVID"
+  ) +
+  theme_void() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 8)
+  )
 ```
