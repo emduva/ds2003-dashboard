@@ -27,6 +27,36 @@ interactive_scatter <- ggplotly(gg_scatter)
 
 # About
 
+```{r}
+#Filtering
+start_date <- covid %>%
+  group_by(Country_Region) %>%
+  summarise(min_date = min(Date)) %>%
+  pull(min_date) %>%
+  max()
+
+end_date <- covid %>%
+  group_by(Country_Region) %>%
+  summarise(max_date = max(Date)) %>%
+  pull(max_date) %>%
+  min()
+
+covid_filtered <- covid %>% 
+  filter(Date >= start_date & Date <= end_date & Country_Region %in% c("Russia", "South Korea", "Italy", "New Zealand", "Singapore", "Bangladesh")) %>% 
+  mutate(
+    treatment_score = (log1p(recovered) - log1p(death))
+  )
+
+#Making The Graph
+ggplot(covid_filtered, mapping=aes(x=Date, y=treatment_score, color=Country_Region)) + 
+  geom_line() + 
+  geom_point() +
+  labs(
+    title = "Covid Treatment Evaluation Over Time (2020)",
+    y = "Treatment Score"
+  )
+```
+
 ## Column
 
 This dashboard explores COVID-19 data.
