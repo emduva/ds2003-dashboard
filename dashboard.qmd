@@ -94,6 +94,53 @@ interactive_scatter
 
 ```{r}
 #| title: Chart 4
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(plotly)
+
+# Load COVID dataset
+covid_data <- read_csv("covid_cleaned_for_analysis.csv")
+covid_data$Date <- as.Date(covid_data$Date, format = "%Y-%m-%d")
+
+# Load population data you created
+pop_data <- read_csv("population_by_country.csv")
+
+# Merge population into COVID data
+covid_data <- left_join(covid_data, pop_data, by = "Country_Region")
+
+# Remove countries without population info
+covid_data <- covid_data %>% filter(!is.na(population) & population > 0)
+
+# Identify top countries by total case count
+top_countries <- covid_data %>%
+  group_by(Country_Region) %>%
+  summarize(Total_Positive_All_Time = sum(daily_positive, na.rm = TRUE)) %>%
+  arrange(desc(Total_Positive_All_Time)) %>%
+  slice_head(n = 10)
+
+# Filter to only top countries
+filtered_data <- covid_data %>%
+  filter(Country_Region %in% top_countries$Country_Region)
+
+# Summarize and normalize by population
+covid_summary <- filtered_data %>%
+  group_by(Country_Region, Date, population) %>%
+  summarize(Total_Positive = sum(daily_positive, na.rm = TRUE), .groups = "drop") %>%
+  mutate(Cases_per_100k = (Total_Positive / population) * 100000)
+
+# Create ggplot
+gg <- ggplot(covid_summary, aes(x = Date, y = Cases_per_100k, color = Country_Region)) +
+  geom_line() +
+  labs(
+    title = "Daily COVID-19 Cases per 100,000 People (Top Countries)",
+    x = "Date",
+    y = "Cases per 100k"
+  ) +
+  theme_minimal()
+
+# Make it interactive
+ggplotly(gg)
 ```
 
 ### Chart 5
