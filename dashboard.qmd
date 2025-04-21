@@ -23,6 +23,7 @@ library(countrycode)
 # Load in data sets
 covid <- read_csv("covid_cleaned_for_analysis.csv")
 pop_data <- read_csv("population_by_country.csv")
+head(covid)
 
 ```
 
@@ -72,6 +73,10 @@ ggplot(covid_filtered, mapping=aes(x=Date, y=treatment_score, color=Country_Regi
 
 ```{r}
 #| title: Influence of Testing on Case Data
+
+COVID <- covid
+Population <- pop_data
+
 bubble_data <- COVID %>%
   group_by(Country_Region) %>%
   summarise(
@@ -113,14 +118,6 @@ plot_ly(
     legend = list(title = list(text = "<b>Continent</b>"))
   )
 ```
-
-### Chart 3
-
-```{r}
-#| title: Chart 3
-interactive_scatter
-```
-
 
 
 # Interactive Visualizations
@@ -179,8 +176,24 @@ ggplotly(gg)
 ### Chart 5
 
 ```{r}
-#| title: Chart 5
-interactive_scatter
+#| title: Deaths and Recoveries
+
+
+# TODO - ability to filter this to a specific date range
+
+covid_filtered <- covid %>% 
+  group_by(Country_Region) %>% 
+  summarize(death_tot = sum(death, na.rm = TRUE),
+            recov_tot = sum(recovered, na.rm = TRUE))
+
+covid_pivot <- pivot_longer(covid_filtered, cols = c(death_tot, recov_tot),
+                            names_to = "Case", values_to = "Count")
+
+death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_Region, Count), fill = Case)) +
+  geom_bar(stat = "identity")
+
+head(covid_pivot)
+ggplotly(death_recovery_graph, tooltip = "text")
 ```
 
 ## Column {width=60%}
