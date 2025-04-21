@@ -43,7 +43,7 @@ interactive_scatter <- ggplotly(gg_scatter)
 
 # About
 
-## Column
+## Column {width=60%}
 
 This dashboard explores COVID-19 data.
 
@@ -80,7 +80,7 @@ ggplot(covid_filtered, mapping=aes(x=Date, y=treatment_score, color=Country_Regi
   )
 ```
 
-## Column
+## Column {width=40%}
 
 ### Chart 2
 
