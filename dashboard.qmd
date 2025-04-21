@@ -101,7 +101,12 @@ ggp <- layout(
       showactive = TRUE
     )
   ),
-  yaxis = list(autorange = TRUE)
+  yaxis = list(
+    title = "Treatment Score",
+    autorange = TRUE,
+    tickmode = "auto",
+    nticks = 12  # ← this sets more ticks on the y-axis
+  )
 )
 ```
 
