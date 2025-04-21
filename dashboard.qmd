@@ -112,6 +112,8 @@ ggp <- layout(
 
 ## Column {width=40%}
 
+Many different hidden factors can influence the raw value for the number of COVID-19 cases in a country. Lack of testing and awareness of COVID in a region can impact how many cases are statistically recorded and the accuracy of the true number of cases. The graph below shows the number cases per 1,000 people compared to the number of tests administered in a country per 1,000 people. Due to a lack of relationship between the two variables in the graph, it can be determined that testing, or lack thereof, did not have a significant impact on the data. From this, testing availability can be ruled out as a major influential factor in determining which countries were more impacted by COVID-19's presence. 
+
 ### Chart 2
 
 ```{r}
