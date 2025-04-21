@@ -23,8 +23,6 @@ library(countrycode)
 # Load in data sets
 covid <- read_csv("covid_cleaned_for_analysis.csv")
 pop_data <- read_csv("population_by_country.csv")
-head(covid)
-
 ```
 
 
@@ -192,7 +190,6 @@ covid_pivot <- pivot_longer(covid_filtered, cols = c(death_tot, recov_tot),
 death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_Region, Count), fill = Case)) +
   geom_bar(stat = "identity")
 
-head(covid_pivot)
 ggplotly(death_recovery_graph, tooltip = "text")
 ```
 
