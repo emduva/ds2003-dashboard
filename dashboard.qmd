@@ -26,20 +26,6 @@ pop_data <- read_csv("population_by_country.csv")
 
 ```
 
-```{r}
-# Create example plot
-gg_scatter <- ggplot(mtcars, aes(x = wt, y = mpg, color = factor(cyl))) +
-  geom_point(size = 3) +
-  labs(title = "Car Weight vs. MPG by Cylinders",
-       x = "Weight (1000 lbs)",
-       y = "Miles Per Gallon",
-       color = "Cylinders")
-
-# Convert to interactive plotly visualization
-interactive_scatter <- ggplotly(gg_scatter)
-```
-
-
 
 # About
 
@@ -85,8 +71,47 @@ ggplot(covid_filtered, mapping=aes(x=Date, y=treatment_score, color=Country_Regi
 ### Chart 2
 
 ```{r}
-#| title: Chart 2
-interactive_scatter
+#| title: Influence of Testing on Case Data
+bubble_data <- COVID %>%
+  group_by(Country_Region) %>%
+  summarise(
+    total_cases = sum(positive, na.rm = TRUE),
+    total_tests = sum(total_tested, na.rm = TRUE)
+  ) %>%
+  left_join(Population, by = "Country_Region") %>%
+  filter(!is.na(population) & population > 0) %>%
+  mutate(
+    cases_per_1000 = (total_cases / population) * 1000,
+    tests_per_1000 = (total_tests / population) * 1000,
+    continent = countrycode(Country_Region, origin = "country.name", destination = "continent")
+  )
+
+bubble_data$continent[is.na(bubble_data$continent)] <- "Other"
+
+plot_ly(
+  data = bubble_data,
+  x = ~tests_per_1000,
+  y = ~cases_per_1000,
+  type = "scatter",
+  mode = "markers",
+  size = ~population,
+  sizes = c(50, 300),
+  color = ~continent,
+  text = ~paste(
+    "Country:", Country_Region,
+    "<br>Continent:", continent,
+    "<br>Cases per 1,000:", round(cases_per_1000, 2),
+    "<br>Tests per 1,000:", round(tests_per_1000, 2),
+    "<br>Population:", format(population, big.mark = ",")
+  ),
+  hoverinfo = "text"
+) %>%
+  layout(
+    title = "Cases vs. Tests per 1,000 People (Bubble Size = Population)",
+    xaxis = list(title = "Tests per 1,000 People"),
+    yaxis = list(title = "Cases per 1,000 People"),
+    legend = list(title = list(text = "<b>Continent</b>"))
+  )
 ```
 
 ### Chart 3
