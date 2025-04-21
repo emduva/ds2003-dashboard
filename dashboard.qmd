@@ -14,6 +14,8 @@ library(ggplot2)
 library(readr)
 library(sf)
 library(viridis)
+library(shiny)
+library(countrycode)
 
 ```
 
@@ -36,7 +38,6 @@ gg_scatter <- ggplot(mtcars, aes(x = wt, y = mpg, color = factor(cyl))) +
 # Convert to interactive plotly visualization
 interactive_scatter <- ggplotly(gg_scatter)
 ```
-
 
 
 
@@ -162,24 +163,10 @@ interactive_scatter
 ### Chart 6
 
 ```{r}
-<<<<<<< HEAD
 #| title: COVID Case Map
 
 COVID <- covid
-=======
-#| title: Chart 6
-library(shiny)
-library(dplyr)
-library(readr)
-library(plotly)
-library(ggplot2)
-library(countrycode)
-library(sf)
-library(viridis)
-
-COVID <- read.csv("covid_cleaned_for_analysis.csv")
-Population <- read.csv("population_by_country.csv")
->>>>>>> e72b8d0da1307b2dbfdb224e8830144fe3964f1e
+Population <- pop_data
 
 covid_summary <- COVID %>%
   group_by(Country_Region) %>%
