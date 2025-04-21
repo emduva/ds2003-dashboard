@@ -62,7 +62,47 @@ ggplot(covid_filtered, mapping=aes(x=Date, y=treatment_score, color=Country_Regi
   labs(
     title = "Covid Treatment Evaluation Over Time (2020)",
     y = "Treatment Score"
+  ) -> graph
+
+#Making Graph Interactive with Dropdown Menu
+ggp <- ggplotly(graph)
+
+countries <- ggp$x$data %>% purrr::map_chr(~.$name)
+n <- length(countries)
+
+visibility_all <- rep(TRUE, n)
+visibility_list <- lapply(1:n, function(i) {
+  rep(FALSE, n) %>% replace(i, TRUE)
+})
+
+dropdown_buttons <- list(
+  list(method = "restyle", args = list("visible", visibility_all), label = "All")
+)
+
+for (i in seq_along(countries)) {
+  dropdown_buttons[[i + 1]] <- list(
+    method = "restyle",
+    args = list("visible", visibility_list[[i]]),
+    label = countries[i]
   )
+}
+
+#Fixing the Layout
+ggp <- layout(
+  ggp,
+  updatemenus = list(
+    list(
+      type = "dropdown",
+      buttons = dropdown_buttons,
+      x = 1.02,
+      xanchor = "left",
+      y = 1.09,
+      yanchor = "top",
+      showactive = TRUE
+    )
+  ),
+  yaxis = list(autorange = TRUE)
+)
 ```
 
 ## Column {width=40%}
