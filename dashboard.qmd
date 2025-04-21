@@ -1,15 +1,28 @@
 ---
-title: "Dashboard"
+title: "COVID-19 Dashboard"
 format: 
   dashboard:
     orientation: columns
 ---
 
 ```{r}
+# Load libraries
 library(tidyverse)
 library(plotly)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(sf)
+library(viridis)
+
 ```
 
+```{r}
+# Load in data sets
+covid <- read_csv("covid_cleaned_for_analysis.csv")
+pop_data <- read_csv("population_by_country.csv")
+
+```
 
 ```{r}
 # Create example plot
@@ -25,9 +38,18 @@ interactive_scatter <- ggplotly(gg_scatter)
 ```
 
 
+
+
 # About
 
+## Column
+
+This dashboard explores COVID-19 data.
+
+### Chart 1
+
 ```{r}
+#| title: Treatment Evaluation
 #Filtering
 start_date <- covid %>%
   group_by(Country_Region) %>%
@@ -59,17 +81,6 @@ ggplot(covid_filtered, mapping=aes(x=Date, y=treatment_score, color=Country_Regi
 
 ## Column
 
-This dashboard explores COVID-19 data.
-
-### Chart 1
-
-```{r}
-#| title: Chart 1
-interactive_scatter
-```
-
-## Column
-
 ### Chart 2
 
 ```{r}
@@ -93,18 +104,14 @@ interactive_scatter
 ### Chart 4
 
 ```{r}
-#| title: Chart 4
-library(dplyr)
-library(ggplot2)
-library(readr)
-library(plotly)
+#| title: Cases Over Time
 
 # Load COVID dataset
-covid_data <- read_csv("covid_cleaned_for_analysis.csv")
+covid_data <- covid
 covid_data$Date <- as.Date(covid_data$Date, format = "%Y-%m-%d")
 
 # Load population data you created
-pop_data <- read_csv("population_by_country.csv")
+
 
 # Merge population into COVID data
 covid_data <- left_join(covid_data, pop_data, by = "Country_Region")
@@ -155,16 +162,9 @@ interactive_scatter
 ### Chart 6
 
 ```{r}
-#| title: Chart 6
-#install.packages("viridis")
+#| title: COVID Case Map
 
-library(ggplot2)
-library(dplyr)
-library(sf)
-library(viridis)
-library(plotly)
-
-COVID <- read.csv("covid_cleaned_for_analysis.csv")
+COVID <- covid
 
 covid_summary <- COVID %>%
   group_by(Country_Region) %>%
