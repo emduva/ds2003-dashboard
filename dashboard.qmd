@@ -162,20 +162,33 @@ interactive_scatter
 ### Chart 6
 
 ```{r}
+<<<<<<< HEAD
 #| title: COVID Case Map
 
 COVID <- covid
+=======
+#| title: Chart 6
+library(shiny)
+library(dplyr)
+library(readr)
+library(plotly)
+library(ggplot2)
+library(countrycode)
+library(sf)
+library(viridis)
+
+COVID <- read.csv("covid_cleaned_for_analysis.csv")
+Population <- read.csv("population_by_country.csv")
+>>>>>>> e72b8d0da1307b2dbfdb224e8830144fe3964f1e
 
 covid_summary <- COVID %>%
   group_by(Country_Region) %>%
   summarise(total_cases = sum(positive, na.rm = TRUE))
 
-Population <- read.csv("population_by_country.csv")
-
 covid_summary <- left_join(covid_summary, Population, by = "Country_Region")
 
 covid_summary <- covid_summary %>%
-  mutate(cases_scaled = (total_cases / population) * 1000)
+  mutate(cases_scaled = (total_cases / population) * 100000)
 
 world_sf <- read_sf("https://raw.githubusercontent.com/holtzy/R-graph-gallery/master/DATA/world.geojson") %>%
   filter(!name %in% c("Antarctica", "Greenland"))
@@ -184,18 +197,18 @@ world_covid <- left_join(world_sf, covid_summary, by = c("name" = "Country_Regio
 
 final_graph <- ggplot(data = world_covid) +
   geom_sf(aes(
-  fill = cases_scaled,
-  text = paste0("Country: ", name, "\nCases per 1000 People: ", round(cases_scaled, 6))
-),
-color = "white", size = 0.1) +
+    fill = cases_scaled,
+    text = paste0("Country: ", name, "\nCases per 100,000 People: ", round(cases_scaled, 2))
+  ),
+  color = "white", size = 0.1) +
   scale_fill_viridis(
     option = "plasma",
     trans = "log",
     na.value = "grey90",
-    name = "Cases per 1,000 People"
+    name = "Cases per 100,000 People"
   ) +
   labs(
-    title = "Global COVID-19 Cases Scaled to Population (2020)",
+    title = "Global COVID-19 Cases per 100,000 People (2020)",
     caption = "Source: covid_cleaned_for_analysis.csv, population_by_country.csv"
   ) +
   theme_void() +
