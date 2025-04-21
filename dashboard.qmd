@@ -30,7 +30,7 @@ pop_data <- read_csv("population_by_country.csv")
 
 ## Column {width=60%}
 
-This dashboard explores COVID-19 data.
+COVID-19 sparked a global health crisis that tested how nations responded to widespread infection. Countries varied in their ability to manage the pandemic, leading to different outcomes in deaths, recoveries, and active cases. The graph below illustrates a treatment score for a few countries during the height of COVID-19. A higher score indicates better management outcomes, with more recoveries relative to deaths and fewer ongoing cases. This global comparison provides essential context for understanding the gravity of COVID-19’s spread and the importance of timely public health interventions. 
 
 ### Chart 1
 
@@ -52,7 +52,7 @@ end_date <- covid %>%
 covid_filtered <- covid %>% 
   filter(Date >= start_date & Date <= end_date & Country_Region %in% c("Russia", "South Korea", "Italy", "New Zealand", "Singapore", "Bangladesh")) %>% 
   mutate(
-    treatment_score = (log1p(recovered) - log1p(death))
+    treatment_score = (log1p(recovered) - log1p(death))/(log1p(active + 1)
   )
 
 #Making The Graph
