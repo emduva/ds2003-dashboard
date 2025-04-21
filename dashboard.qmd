@@ -181,14 +181,20 @@ ggplotly(gg)
 
 covid_filtered <- covid %>% 
   group_by(Country_Region) %>% 
-  summarize(death_tot = sum(death, na.rm = TRUE),
-            recov_tot = sum(recovered, na.rm = TRUE))
+  summarize(Death = sum(death, na.rm = TRUE),
+            Recovered = sum(recovered, na.rm = TRUE))
 
-covid_pivot <- pivot_longer(covid_filtered, cols = c(death_tot, recov_tot),
+covid_pivot <- pivot_longer(covid_filtered, cols = c(Death, Recovered),
                             names_to = "Case", values_to = "Count")
 
 death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_Region, Count), fill = Case)) +
-  geom_bar(stat = "identity")
+  geom_bar(stat = "identity") +
+    labs(
+    title = "Covid Deaths and Recoveries (2020)",
+    x = "Number of Cases",
+    y = "Country"
+  ) +
+  theme_minimal()
 
 ggplotly(death_recovery_graph, tooltip = "text")
 ```
