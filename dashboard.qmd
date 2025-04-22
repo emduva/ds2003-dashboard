@@ -217,7 +217,51 @@ gg <- ggplot(covid_summary, aes(x = Date, y = Cases_per_100k, color = Country_Re
   theme_minimal()
 
 # Make it interactive
-ggplotly(gg)
+ggp <- ggplotly(gg)
+
+countries <- ggp$x$data %>% purrr::map_chr(~.$name)
+n <- length(countries)
+
+visibility_all <- rep(TRUE, n)
+visibility_list <- lapply(1:n, function(i) {
+  rep(FALSE, n) %>% replace(i, TRUE)
+})
+
+dropdown_buttons <- list(
+  list(method = "restyle", args = list("visible", visibility_all), label = "All")
+)
+
+for (i in seq_along(countries)) {
+  dropdown_buttons[[i + 1]] <- list(
+    method = "restyle",
+    args = list("visible", visibility_list[[i]]),
+    label = countries[i]
+  )
+}
+
+#Fixing the Layout
+ggp <- layout(
+  ggp,
+  updatemenus = list(
+    list(
+      type = "dropdown",
+      buttons = dropdown_buttons,
+      x = 1.02,
+      xanchor = "left",
+      y = 1.09,
+      yanchor = "top",
+      showactive = TRUE
+    )
+  ),
+  yaxis = list(
+    title = "Treatment Score",
+    autorange = TRUE,
+    tickmode = "auto",
+    nticks = 12  # ← this sets more ticks on the y-axis
+  )
+)
+
+ggp
 ```
 
 ### Chart 5
