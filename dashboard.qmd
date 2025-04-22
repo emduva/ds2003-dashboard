@@ -242,6 +242,10 @@ for (i in seq_along(countries)) {
 #Fixing the Layout
 ggp <- layout(
   ggp,
+  xaxis = list(
+    title = "Date",
+    rangeslider = list(type = "date")
+  ),
   updatemenus = list(
     list(
       type = "dropdown",
@@ -254,7 +258,7 @@ ggp <- layout(
     )
   ),
   yaxis = list(
-    title = "Treatment Score",
+    title = "Cases per 100k",
     autorange = TRUE,
     tickmode = "auto",
     nticks = 12  # ← this sets more ticks on the y-axis
