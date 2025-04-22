@@ -293,7 +293,14 @@ death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_R
   ) +
   theme_minimal()
 
-ggplotly(death_recovery_graph, tooltip = "text")
+d_r_ggp <- ggplotly(death_recovery_graph)
+
+d_r_ggp <- d_r_ggp %>% layout(
+    title = "Covid Deaths and Recoveries (2020)",
+    xaxis = list(title = "Number of Cases", tickmode = "auto"),
+    yaxis = list(title = "Country"))
+
+d_r_ggp
 ```
 
 ## Column {width=60%}
