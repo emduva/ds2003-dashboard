@@ -1,0 +1,403 @@
+---
+title: "COVID-19 Dashboard"
+format: 
+  dashboard:
+    orientation: columns
+runtime: shiny
+---
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(plotly)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(sf)
+library(viridis)
+library(shiny)
+library(countrycode)
+
+```
+
+```{r}
+# Load in data sets
+covid <- read_csv("covid_cleaned_for_analysis.csv")
+pop_data <- read_csv("population_by_country.csv")
+```
+
+
+# About
+
+## Column {width=60%}
+
+COVID-19 sparked a global health crisis that tested how nations responded to widespread infection. Countries varied in their ability to manage the pandemic, leading to different outcomes in deaths, recoveries, and active cases. The graph below illustrates a treatment score for a few countries during the height of COVID-19. A higher score indicates better management outcomes, with more recoveries relative to deaths and fewer ongoing cases. This global comparison provides essential context for understanding the gravity of COVID-19’s spread and the importance of timely public health interventions. 
+
+### Chart 1
+
+```{r}
+#| title: Treatment Evaluation
+#Filtering
+start_date <- covid %>%
+  group_by(Country_Region) %>%
+  summarise(min_date = min(Date)) %>%
+  pull(min_date) %>%
+  max()
+
+end_date <- covid %>%
+  group_by(Country_Region) %>%
+  summarise(max_date = max(Date)) %>%
+  pull(max_date) %>%
+  min()
+
+covid_filtered <- covid %>% 
+  filter(Date >= start_date & Date <= end_date & Country_Region %in% c("Russia", "South Korea", "Italy", "New Zealand", "Singapore", "Bangladesh")) %>% 
+  mutate(
+    treatment_score = (log1p(recovered) - log1p(death))/(log1p(active + 1))
+  )
+
+#Making The Graph
+ggplot(covid_filtered, mapping=aes(x=Date, y=treatment_score, color=Country_Region)) + 
+  geom_line() + 
+  geom_point() +
+  labs(
+    title = "Covid Treatment Evaluation Over Time (2020)",
+    y = "Treatment Score"
+  ) -> graph
+
+#Making Graph Interactive with Dropdown Menu
+ggp <- ggplotly(graph)
+
+countries <- ggp$x$data %>% purrr::map_chr(~.$name)
+n <- length(countries)
+
+visibility_all <- rep(TRUE, n)
+visibility_list <- lapply(1:n, function(i) {
+  rep(FALSE, n) %>% replace(i, TRUE)
+})
+
+dropdown_buttons <- list(
+  list(method = "restyle", args = list("visible", visibility_all), label = "All")
+)
+
+for (i in seq_along(countries)) {
+  dropdown_buttons[[i + 1]] <- list(
+    method = "restyle",
+    args = list("visible", visibility_list[[i]]),
+    label = countries[i]
+  )
+}
+
+#Fixing the Layout
+ggp <- layout(
+  ggp,
+  updatemenus = list(
+    list(
+      type = "dropdown",
+      buttons = dropdown_buttons,
+      x = 1.02,
+      xanchor = "left",
+      y = 1.09,
+      yanchor = "top",
+      showactive = TRUE
+    )
+  ),
+  yaxis = list(
+    title = "Treatment Score",
+    autorange = TRUE,
+    tickmode = "auto",
+    nticks = 12  # ← this sets more ticks on the y-axis
+  )
+)
+
+ggp
+```
+
+## Column {width=40%}
+
+Many different hidden factors can influence the raw value for the number of COVID-19 cases in a country. Lack of testing and awareness of COVID in a region can impact how many cases are statistically recorded and the accuracy of the true number of cases. The graph below shows the number cases per 1,000 people compared to the number of tests administered in a country per 1,000 people. Due to a lack of relationship between the two variables in the graph, it can be determined that testing, or lack thereof, did not have a significant impact on the data. From this, testing availability can be ruled out as a major influential factor in determining which countries were more impacted by COVID-19's presence. 
+
+### Chart 2
+
+```{r}
+#| title: Influence of Testing on Case Data
+
+COVID <- covid
+pop_data <- pop_data
+
+bubble_data <- COVID %>%
+  group_by(Country_Region) %>%
+  summarise(
+    total_cases = sum(positive, na.rm = TRUE),
+    total_tests = sum(total_tested, na.rm = TRUE)
+  ) %>%
+  left_join(pop_data, by = "Country_Region") %>%
+  filter(!is.na(population) & population > 0) %>%
+  mutate(
+    cases_per_1000 = (total_cases / population) * 1000,
+    tests_per_1000 = (total_tests / population) * 1000,
+    continent = countrycode(Country_Region, origin = "country.name", destination = "continent")
+  )
+
+bubble_data$continent[is.na(bubble_data$continent)] <- "Other"
+
+plot_ly(
+  data = bubble_data,
+  x = ~tests_per_1000,
+  y = ~cases_per_1000,
+  type = "scatter",
+  mode = "markers",
+  size = ~population,
+  sizes = c(50, 300),
+  color = ~continent,
+  text = ~paste(
+    "Country:", Country_Region,
+    "<br>Continent:", continent,
+    "<br>Cases per 1,000:", round(cases_per_1000, 2),
+    "<br>Tests per 1,000:", round(tests_per_1000, 2),
+    "<br>pop_data:", format(population, big.mark = ",")
+  ),
+  hoverinfo = "text"
+) %>%
+  layout(
+    title = "Cases vs. Tests per 1,000 People (Bubble Size = pop_data)",
+    xaxis = list(title = "Tests per 1,000 People"),
+    yaxis = list(title = "Cases per 1,000 People"),
+    legend = list(title = list(text = "<b>Continent</b>"))
+  )
+```
+
+
+# Interactive Visualizations
+
+## Column {width=40%}
+
+### Chart 4
+
+```{r}
+#| title: Cases Over Time
+
+# Load COVID dataset
+covid_data <- covid
+covid_data$Date <- as.Date(covid_data$Date, format = "%Y-%m-%d")
+
+# Load population data you created
+
+
+# Merge population into COVID data
+covid_data <- left_join(covid_data, pop_data, by = "Country_Region")
+
+# Remove countries without population info
+covid_data <- covid_data %>% filter(!is.na(population) & population > 0)
+
+# Identify top countries by total case count
+top_countries <- covid_data %>%
+  group_by(Country_Region) %>%
+  summarize(Total_Positive_All_Time = sum(daily_positive, na.rm = TRUE)) %>%
+  arrange(desc(Total_Positive_All_Time)) %>%
+  slice_head(n = 10)
+
+# Filter to only top countries
+filtered_data <- covid_data %>%
+  filter(Country_Region %in% top_countries$Country_Region)
+
+# Summarize and normalize by population
+covid_summary <- filtered_data %>%
+  group_by(Country_Region, Date, population) %>%
+  summarize(Total_Positive = sum(daily_positive, na.rm = TRUE), .groups = "drop") %>%
+  mutate(Cases_per_100k = (Total_Positive / population) * 100000)
+
+# Create ggplot
+gg <- ggplot(covid_summary, aes(x = Date, y = Cases_per_100k, color = Country_Region)) +
+  geom_line() +
+  labs(
+    title = "Daily COVID-19 Cases per 100,000 People (Top Countries)",
+    x = "Date",
+    y = "Cases per 100k"
+  ) +
+  theme_minimal()
+
+# Make it interactive
+ggp <- ggplotly(gg)
+
+countries <- ggp$x$data %>% purrr::map_chr(~.$name)
+n <- length(countries)
+
+visibility_all <- rep(TRUE, n)
+visibility_list <- lapply(1:n, function(i) {
+  rep(FALSE, n) %>% replace(i, TRUE)
+})
+
+dropdown_buttons <- list(
+  list(method = "restyle", args = list("visible", visibility_all), label = "All")
+)
+
+for (i in seq_along(countries)) {
+  dropdown_buttons[[i + 1]] <- list(
+    method = "restyle",
+    args = list("visible", visibility_list[[i]]),
+    label = countries[i]
+  )
+}
+
+#Fixing the Layout
+ggp <- layout(
+  ggp,
+  xaxis = list(
+    title = "Date",
+    rangeslider = list(type = "date")
+  ),
+  updatemenus = list(
+    list(
+      type = "dropdown",
+      buttons = dropdown_buttons,
+      x = 1.02,
+      xanchor = "left",
+      y = 1.09,
+      yanchor = "top",
+      showactive = TRUE
+    )
+  ),
+  yaxis = list(
+    title = "Cases per 100k",
+    autorange = TRUE,
+    tickmode = "auto",
+    nticks = 12  # ← this sets more ticks on the y-axis
+  )
+)
+
+ggp
+```
+
+### Chart 5
+
+```{r}
+#| title: Deaths and Recoveries
+
+
+# TODO - ability to filter this to a specific date range
+
+covid_filtered <- covid %>% 
+  group_by(Country_Region) %>% 
+  summarize(Death = sum(death, na.rm = TRUE),
+            Recovered = sum(recovered, na.rm = TRUE))
+
+covid_pivot <- pivot_longer(covid_filtered, cols = c(Death, Recovered),
+                            names_to = "Case", values_to = "Count")
+
+death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_Region, Count), fill = Case)) +
+  geom_bar(stat = "identity") +
+    labs(
+    title = "Covid Deaths and Recoveries (2020)",
+    x = "Number of Cases",
+    y = "Country"
+  ) +
+  theme_minimal()
+
+d_r_ggp <- ggplotly(death_recovery_graph)
+
+d_r_ggp <- d_r_ggp %>% layout(
+    title = "Covid Deaths and Recoveries (2020)",
+    xaxis = list(title = "Number of Cases", tickmode = "auto"),
+    yaxis = list(title = "Country"))
+
+d_r_ggp
+```
+
+## Column {width=60%}
+
+### Chart 6
+
+```{r}
+#| title: COVID Case Map
+
+COVID <- covid
+pop_data <- pop_data
+
+covid_summary <- COVID %>%
+  group_by(Country_Region) %>%
+  summarise(total_cases = sum(positive, na.rm = TRUE))
+
+covid_summary <- covid_summary <- left_join(covid_summary, pop_data, by = "Country_Region")
+
+covid_summary <- covid_summary %>%
+  mutate(cases_scaled = (total_cases / population) * 100000)
+
+world_sf <- read_sf("https://raw.githubusercontent.com/holtzy/R-graph-gallery/master/DATA/world.geojson") %>%
+  filter(!name %in% c("Antarctica", "Greenland"))
+
+world_covid <- left_join(world_sf, covid_summary, by = c("name" = "Country_Region"))
+
+final_graph <- ggplot(data = world_covid) +
+  geom_sf(aes(
+    fill = cases_scaled,
+    text = paste0("Country: ", name, "\nCases per 100,000 People: ", round(cases_scaled, 2))
+  ),
+  color = "white", size = 0.1) +
+  scale_fill_viridis(
+    option = "plasma",
+    trans = "log",
+    na.value = "grey90",
+    name = "Cases per 100,000 People"
+  ) +
+  labs(
+    title = "Global COVID-19 Cases per 100,000 People (2020)",
+    caption = "Source: covid_cleaned_for_analysis.csv, population_by_country.csv"
+  ) +
+  theme_void() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 8)
+  )
+
+ggplotly(final_graph, tooltip = "text")
+```
+
+
+```{r}
+# Reactive selection based on user clicking a country on the map (Graph 6)
+selected_country <- reactive({
+  click <- event_data("plotly_click")
+  if (is.null(click)) return(NULL)
+  click$key
+})
+```
+
+```{r}
+# Graph 4: Time series of cases for selected country
+renderPlotly({
+  req(selected_country())
+  covid %>%
+    filter(Country_Region == selected_country()) %>%
+    plot_ly(x = ~Date, y = ~positive, type = "scatter", mode = "lines+markers",
+            name = "Cases")
+})
+```
+
+```{r}
+# Graph 5: Time series of deaths for selected country
+renderPlotly({
+  req(selected_country())
+  covid %>%
+    filter(Country_Region == selected_country()) %>%
+    plot_ly(x = ~Date, y = ~death, type = "scatter", mode = "lines+markers",
+            name = "Deaths")
+})
+```
+
+```{r}
+# Graph 6: Choropleth map with clickable countries (key = Country_Region)
+renderPlotly({
+  plot_ly(covid_summary, type = "choropleth",
+          locations = ~Country_Region,
+          locationmode = 'country names',
+          z = ~cases_scaled,
+          text = ~Country_Region,
+          key = ~Country_Region,
+          colorscale = 'Viridis') %>%
+    layout(title = 'COVID-19 Cases per 100K by Country')
+})
+```
+
+
