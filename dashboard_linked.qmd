@@ -282,12 +282,21 @@ plotOutput('dr')
 
 ## Column {width=60%}
 
-### Selector {height=30%}
+### Selector {height=10%}
 
 ```{R}
-dateRangeInput("daterange1", "Date range:",
-                 start = "2020-02-01",
-                 end   = "2020-11-01",
+
+dateInput("date1", "Select min date:",
+                 value = "2020-03-01",
+                 min   = "2020-01-01",
+                 max   = "2020-12-31")
+```
+
+
+```{R}
+
+dateInput("date2", "Select max date:",
+                 value = "2020-05-01",
                  min   = "2020-01-01",
                  max   = "2020-12-31")
 ```
@@ -346,9 +355,10 @@ ggplotly(final_graph, tooltip = "text")
 
 output$dr <- renderPlot({
   
-  minDate <- input$daterange1[1]
-  maxDate <- input$daterange1[2]
+  minDate <- input$date1
+  maxDate <- input$date2
   
+
   covid_filtered <- covid %>% 
     filter(covid$Date >= minDate)
   
