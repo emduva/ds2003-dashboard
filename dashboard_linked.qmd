@@ -276,7 +276,7 @@ ggp
 ```{r}
 #| title: Deaths and Recoveries
 
-plotOutput('dr')
+plotlyOutput('dr')
 
 ```
 
@@ -315,7 +315,7 @@ plotlyOutput('map')
 #| context: server
 # Reactive selection of date range
 
-output$dr <- renderPlot({
+output$dr <- renderPlotly({
   
   minDate <- input$date1
   maxDate <- input$date2
@@ -335,16 +335,23 @@ output$dr <- renderPlot({
   covid_pivot <- pivot_longer(covid_filtered, cols = c(Death, Recovered),
                             names_to = "Case", values_to = "Count")
 
-death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_Region, Count), fill = Case)) +
-  geom_bar(stat = "identity") +
-    labs(
-    title = "Covid Deaths and Recoveries (2020)",
-    x = "Number of Cases",
-    y = "Country"
-  ) +
-  theme_minimal()
-
-death_recovery_graph
+  death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_Region, Count), fill = Case)) +
+    geom_bar(stat = "identity") +
+      labs(
+      title = "Covid Deaths and Recoveries (2020)",
+      x = "Number of Cases",
+      y = "Country"
+    ) +
+    theme_minimal()
+  
+  d_r_ggp <- ggplotly(death_recovery_graph)
+  
+  d_r_ggp <- d_r_ggp %>% layout(
+      title = "Covid Deaths and Recoveries (2020)",
+      xaxis = list(title = "Number of Cases", tickmode = "auto"),
+      yaxis = list(title = "Country"))
+  
+  d_r_ggp
 })
 
 output$map <- renderPlotly({
