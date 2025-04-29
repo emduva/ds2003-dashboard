@@ -276,37 +276,21 @@ ggp
 ```{r}
 #| title: Deaths and Recoveries
 
+plotOutput('dr')
 
-# TODO - ability to filter this to a specific date range
-
-covid_filtered <- covid %>% 
-  group_by(Country_Region) %>% 
-  summarize(Death = sum(death, na.rm = TRUE),
-            Recovered = sum(recovered, na.rm = TRUE))
-
-covid_pivot <- pivot_longer(covid_filtered, cols = c(Death, Recovered),
-                            names_to = "Case", values_to = "Count")
-
-death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_Region, Count), fill = Case)) +
-  geom_bar(stat = "identity") +
-    labs(
-    title = "Covid Deaths and Recoveries (2020)",
-    x = "Number of Cases",
-    y = "Country"
-  ) +
-  theme_minimal()
-
-d_r_ggp <- ggplotly(death_recovery_graph)
-
-d_r_ggp <- d_r_ggp %>% layout(
-    title = "Covid Deaths and Recoveries (2020)",
-    xaxis = list(title = "Number of Cases", tickmode = "auto"),
-    yaxis = list(title = "Country"))
-
-d_r_ggp
 ```
 
 ## Column {width=60%}
+
+### Selector {height=30%}
+
+```{R}
+dateRangeInput("daterange1", "Date range:",
+                 start = "2020-02-01",
+                 end   = "2020-11-01",
+                 min   = "2020-01-01",
+                 max   = "2020-12-31")
+```
 
 ### Chart 6
 
@@ -350,72 +334,45 @@ final_graph <- ggplot(data = world_covid) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
     legend.title = element_text(size = 10),
-    legend.text = element_text(size = 8)
   )
 
 ggplotly(final_graph, tooltip = "text")
 ```
 
-# Interactive Visualizations 2
-
-## Column {width=40%}
-
-### Chart 7
-
-```{r}
-plotOutput('tscases')
-```
-
-### Chart 8
-
-```{r}
-plotOutput('tsdeaths')
-```
-
-## Column {width=60%}
-
-### Chart 9
-
-```{r}
-# Graph 6: Choropleth map with clickable countries (key = Country_Region)
-renderPlotly({
-  plot_ly(covid_summary, type = "choropleth",
-          locations = ~Country_Region,
-          locationmode = 'country names',
-          z = ~cases_scaled,
-          text = ~Country_Region,
-          key = ~Country_Region,
-          colorscale = 'Viridis') %>%
-    layout(title = 'COVID-19 Cases per 100K by Country')
-})
-```
-
 
 ```{r}
 #| context: server
-# Reactive selection based on user clicking a country on the map (Graph 6)
-selected_country <- reactive({
-  click <- event_data("plotly_click")
-  if (is.null(click)) return(NULL)
-  click$key
-})
+# Reactive selection of date range
 
-# Graph 4: Time series of cases for selected country
-output$tscases <- renderPlotly({
-  req(selected_country())
-  covid %>%
-    filter(Country_Region == selected_country()) %>%
-    plot_ly(x = ~Date, y = ~positive, type = "scatter", mode = "lines+markers",
-            name = "Cases")
-})
+output$dr <- renderPlot({
+  
+  minDate <- input$daterange1[1]
+  maxDate <- input$daterange1[2]
+  
+  covid_filtered <- covid %>% 
+    filter(covid$Date >= minDate)
+  
+  covid_filtered <- covid_filtered %>% 
+    filter(covid_filtered$Date <= maxDate)
+  
+  covid_filtered <- covid_filtered %>% 
+  group_by(Country_Region) %>% 
+  summarize(Death = sum(death, na.rm = TRUE),
+            Recovered = sum(recovered, na.rm = TRUE))
+  
+  covid_pivot <- pivot_longer(covid_filtered, cols = c(Death, Recovered),
+                            names_to = "Case", values_to = "Count")
 
-# Graph 5: Time series of deaths for selected country
-output$tsdeaths <- renderPlotly({
-  req(selected_country())
-  covid %>%
-    filter(Country_Region == selected_country()) %>%
-    plot_ly(x = ~Date, y = ~death, type = "scatter", mode = "lines+markers",
-            name = "Deaths")
+death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_Region, Count), fill = Case)) +
+  geom_bar(stat = "identity") +
+    labs(
+    title = "Covid Deaths and Recoveries (2020)",
+    x = "Number of Cases",
+    y = "Country"
+  ) +
+  theme_minimal()
+
+death_recovery_graph
 })
 
 ```
