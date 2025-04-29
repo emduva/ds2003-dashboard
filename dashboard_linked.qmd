@@ -32,7 +32,7 @@ conflicts_prefer(
 #| context: setup
 # Load in data sets
 covid <- read_csv("covid_cleaned_for_analysis.csv")
-pop_data <- read_csv("population_by_country.csv")
+pop_data <- read_csv("Population_by_Country.csv")
 ```
 
 
