@@ -108,7 +108,7 @@ ggp <- layout(
     title = "Treatment Score",
     autorange = TRUE,
     tickmode = "auto",
-    nticks = 12  # ← this sets more ticks on the y-axis
+    nticks = 12  #this sets more ticks on the y-axis
   )
 )
 
@@ -264,7 +264,7 @@ ggp <- layout(
     title = "Cases per 100k",
     autorange = TRUE,
     tickmode = "auto",
-    nticks = 12  # ← this sets more ticks on the y-axis
+    nticks = 12  # this sets more ticks on the y-axis
   )
 )
 
