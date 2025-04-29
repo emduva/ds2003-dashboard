@@ -3,10 +3,11 @@ title: "COVID-19 Dashboard"
 format: 
   dashboard:
     orientation: columns
-runtime: shiny
+server: shiny
 ---
 
 ```{r}
+#| context: setup
 # Load libraries
 library(tidyverse)
 library(plotly)
@@ -21,6 +22,7 @@ library(countrycode)
 ```
 
 ```{r}
+#| context: setup
 # Load in data sets
 covid <- read_csv("covid_cleaned_for_analysis.csv")
 pop_data <- read_csv("population_by_country.csv")
@@ -354,37 +356,25 @@ final_graph <- ggplot(data = world_covid) +
 ggplotly(final_graph, tooltip = "text")
 ```
 
+# Interactive Visualizations 2
+
+## Column {width=40%}
+
+### Chart 7
 
 ```{r}
-# Reactive selection based on user clicking a country on the map (Graph 6)
-selected_country <- reactive({
-  click <- event_data("plotly_click")
-  if (is.null(click)) return(NULL)
-  click$key
-})
+plotOutput('tscases')
 ```
 
-```{r}
-# Graph 4: Time series of cases for selected country
-renderPlotly({
-  req(selected_country())
-  covid %>%
-    filter(Country_Region == selected_country()) %>%
-    plot_ly(x = ~Date, y = ~positive, type = "scatter", mode = "lines+markers",
-            name = "Cases")
-})
-```
+### Chart 8
 
 ```{r}
-# Graph 5: Time series of deaths for selected country
-renderPlotly({
-  req(selected_country())
-  covid %>%
-    filter(Country_Region == selected_country()) %>%
-    plot_ly(x = ~Date, y = ~death, type = "scatter", mode = "lines+markers",
-            name = "Deaths")
-})
+plotOutput('tsdeaths')
 ```
+
+## Column {width=60%}
+
+### Chart 9
 
 ```{r}
 # Graph 6: Choropleth map with clickable countries (key = Country_Region)
@@ -398,6 +388,36 @@ renderPlotly({
           colorscale = 'Viridis') %>%
     layout(title = 'COVID-19 Cases per 100K by Country')
 })
+```
+
+
+```{r}
+#| context: server
+# Reactive selection based on user clicking a country on the map (Graph 6)
+selected_country <- reactive({
+  click <- event_data("plotly_click")
+  if (is.null(click)) return(NULL)
+  click$key
+})
+
+# Graph 4: Time series of cases for selected country
+output$tscases <- renderPlotly({
+  req(selected_country())
+  covid %>%
+    filter(Country_Region == selected_country()) %>%
+    plot_ly(x = ~Date, y = ~positive, type = "scatter", mode = "lines+markers",
+            name = "Cases")
+})
+
+# Graph 5: Time series of deaths for selected country
+output$tsdeaths <- renderPlotly({
+  req(selected_country())
+  covid %>%
+    filter(Country_Region == selected_country()) %>%
+    plot_ly(x = ~Date, y = ~death, type = "scatter", mode = "lines+markers",
+            name = "Deaths")
+})
+
 ```
 
 
