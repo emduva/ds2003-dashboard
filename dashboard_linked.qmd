@@ -306,46 +306,8 @@ dateInput("date2", "Select max date:",
 ```{r}
 #| title: COVID Case Map
 
-COVID <- covid
-pop_data <- pop_data
+plotlyOutput('map')
 
-covid_summary <- COVID %>%
-  group_by(Country_Region) %>%
-  summarise(total_cases = sum(positive, na.rm = TRUE))
-
-covid_summary <- covid_summary <- left_join(covid_summary, pop_data, by = "Country_Region")
-
-covid_summary <- covid_summary %>%
-  mutate(cases_scaled = (total_cases / population) * 100000)
-
-world_sf <- read_sf("https://raw.githubusercontent.com/holtzy/R-graph-gallery/master/DATA/world.geojson") %>%
-  filter(!name %in% c("Antarctica", "Greenland"))
-
-world_covid <- left_join(world_sf, covid_summary, by = c("name" = "Country_Region"))
-
-final_graph <- ggplot(data = world_covid) +
-  geom_sf(aes(
-    fill = cases_scaled,
-    text = paste0("Country: ", name, "\nCases per 100,000 People: ", round(cases_scaled, 2))
-  ),
-  color = "white", size = 0.1) +
-  scale_fill_viridis(
-    option = "plasma",
-    trans = "log",
-    na.value = "grey90",
-    name = "Cases per 100,000 People"
-  ) +
-  labs(
-    title = "Global COVID-19 Cases per 100,000 People (2020)",
-    caption = "Source: covid_cleaned_for_analysis.csv, population_by_country.csv"
-  ) +
-  theme_void() +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
-    legend.title = element_text(size = 10),
-  )
-
-ggplotly(final_graph, tooltip = "text")
 ```
 
 
@@ -383,6 +345,59 @@ death_recovery_graph <- ggplot(covid_pivot, aes(x = Count, y = reorder(Country_R
   theme_minimal()
 
 death_recovery_graph
+})
+
+output$map <- renderPlotly({
+  
+  minDate <- input$date1
+  maxDate <- input$date2
+  
+  covid_filtered <- covid %>% 
+    filter(covid$Date >= minDate)
+  
+  covid_filtered <- covid_filtered %>% 
+    filter(covid_filtered$Date <= maxDate)
+  
+  COVID <- covid_filtered
+  pop_data <- pop_data
+  
+  covid_summary <- COVID %>%
+    group_by(Country_Region) %>%
+    summarise(total_cases = sum(positive, na.rm = TRUE))
+  
+  covid_summary <- covid_summary <- left_join(covid_summary, pop_data, by = "Country_Region")
+  
+  covid_summary <- covid_summary %>%
+    mutate(cases_scaled = (total_cases / population) * 100000)
+  
+  world_sf <- read_sf("https://raw.githubusercontent.com/holtzy/R-graph-gallery/master/DATA/world.geojson") %>%
+    filter(!name %in% c("Antarctica", "Greenland"))
+  
+  world_covid <- left_join(world_sf, covid_summary, by = c("name" = "Country_Region"))
+  
+  final_graph <- ggplot(data = world_covid) +
+    geom_sf(aes(
+      fill = cases_scaled,
+      text = paste0("Country: ", name, "\nCases per 100,000 People: ", round(cases_scaled, 2))
+    ),
+    color = "white", size = 0.1) +
+    scale_fill_viridis(
+      option = "plasma",
+      trans = "log",
+      na.value = "grey90",
+      name = "Cases per 100,000 People"
+    ) +
+    labs(
+      title = "Global COVID-19 Cases per 100,000 People (2020)",
+      caption = "Source: covid_cleaned_for_analysis.csv, population_by_country.csv"
+    ) +
+    theme_void() +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+      legend.title = element_text(size = 10),
+    )
+  
+  ggplotly(final_graph, tooltip = "text")
 })
 
 ```
