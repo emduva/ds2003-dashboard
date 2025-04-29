@@ -11,13 +11,20 @@ server: shiny
 # Load libraries
 library(tidyverse)
 library(plotly)
-library(dplyr)
 library(ggplot2)
 library(readr)
 library(sf)
+library(dplyr)
 library(viridis)
 library(shiny)
 library(countrycode)
+library(conflicted)  
+
+conflicts_prefer(
+  dplyr::filter(),
+  dplyr::lag(),
+  plotly::layout(),
+)
 
 ```
 
